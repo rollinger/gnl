@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 08:00:26 by prolling          #+#    #+#             */
-/*   Updated: 2021/05/30 10:02:38 by prolling         ###   ########.fr       */
+/*   Updated: 2021/05/30 12:30:39 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,12 @@
 
 
 int		get_next_line(int fd, char **line);
+int		get_buffer_state(char *buf);
 size_t	valid_fd(int fd);
+size_t	copy_line_shift_fragment(char *buf, char *line);
+int		update_buffer_content(fd, buf, frag_start=0);
+void	*ft_memchr(const void *s, int c, size_t n);
+void	*ft_memmove(void *dest, const void *src, size_t n);
+void	*ft_memcpy(void *dest, const void *src, size_t n);
 
 #endif
