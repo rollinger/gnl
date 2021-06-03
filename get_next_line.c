@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/03 11:18:37 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/03 11:21:51 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,10 @@ int	get_next_line(int fd, char **line)
 		// cache full buffer and/or fill buffer up by reading remaining bytes
 		eof = update_buffer_content(fd, fd_buffer[fd], buf_state);
 		if (eof == 0)
-			break;
+			break ;
 		buf_state = get_buffer_state(fd_buffer[fd]);
 		if (buf_state == 0)
-			break;
+			break ;
 		// Fully loaded w/o nl: cache all and
 		copy_line_shift_fragment(fd_buffer[fd], *line);
 		buf_state = get_buffer_state(fd_buffer[fd]);
@@ -89,16 +89,14 @@ size_t	valid_fd(int fd)
 * Returns [pos,0] if a \0 is found
 * Returns [pos,1] if a \n is found
 * pos: until which content is present without a newline.
-*
+* state: [0]=> counter [1]=>state (end-of-buffer / newline)
 */
 int	*get_buffer_state(char *buf)
 {
-	int	state[2]; //[0]=> counter [1]=>state (end-of-buffer / newline)
+	int	state[2];
 
-	if (!buf) //error - do I need to check?
-		return (NULL);
-	state = {0,0};
-	while (state[0] < BUFFER_SIZE) //iterate BUFFER_SIZE-1 positions
+	state = {0, 0};
+	while (state[0] < BUFFER_SIZE) //iterate BUFFER_SIZE-1 positions (0-idx)
 	{
 		if (buf[state[0]] == '\n')
 		{
