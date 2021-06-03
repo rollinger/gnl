@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/03 11:21:51 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/03 12:04:54 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,27 +43,29 @@
 */
 int	get_next_line(int fd, char **line)
 {
-	static char	fd_buffer[MAX_FD][BUFFER_SIZE + 1];
+	static char	fd_buffer[MAX_FD][BUFFER_SIZE];
 	int			buf_state[2];
 	int			eof;
+	size_t		line_size;
 
 	if (!valid_fd(fd) || BUFFER_SIZE <= 0) //Maybe test malloc line too?
 		return (-1);
-	buf_state = get_buffer_state(fd_buffer[fd]); //initial buffer state
-	while (buf_state[1] != 0) // buffer update loop until nl found
+	line_size = 0;
+	buf_state = get_buffer_state(fd_buffer[fd]); //initial buffer state determ
+	while (buf_state[1] != 1) // buffer update loop until nl found
 	{
 		// cache full buffer and/or fill buffer up by reading remaining bytes
 		eof = update_buffer_content(fd, fd_buffer[fd], buf_state);
 		if (eof == 0)
 			break ;
 		buf_state = get_buffer_state(fd_buffer[fd]);
-		if (buf_state == 0)
+		if (buf_state[1] == 1)
 			break ;
 		// Fully loaded w/o nl: cache all and
 		copy_line_shift_fragment(fd_buffer[fd], *line);
 		buf_state = get_buffer_state(fd_buffer[fd]);
 	}
-	if (buf_state == 0) // newline found
+	if (buf_state == 1) // newline found
 	{
 		copy_line_shift_fragment(fd_buffer[fd], *line);
 		return (1);
@@ -114,24 +116,23 @@ int	*get_buffer_state(char *buf)
 }
 
 /*
-* Copies the buffer from start to \n into the line and memmoves the remaining
-* right hand portion to the start of the buffer. The line contains the \n (!)
-* returns length of fragment shifted / remaining
+* Copies the buffer from start to first \n -or- \0 into the *line and memmoves
+* the remaining right hand portion to the start of the buffer.
+* returns length of fragment shifted (remaining fragment)
 */
-size_t	copy_line_shift_fragment(char *buf, char *line)
+size_t	copy_line_shift_fragment(char *buf, char *line, int *buf_state)
 {
-	char	*newline;
-	size_t	length;
+	char	*frag_start;
+	size_t	frag_length;
 
-	length = 0;
-	newline = (char *)ft_memchr((const void *)buf, '\n', BUFFER_SIZE + 1);
-	if (newline)
+	frag_start = (buf + buf_state[0] + 1);
+	frag_length = BUFFER_SIZE - buf_state[0];
+	if (buf_state[0] > 0)
 	{
-		length = newline - buf + 1;
-		ft_memcpy((void *)line, (const void *)buf, length);
-		ft_memmove((void *)buf, (const void *)newline, BUFFER_SIZE - length);
+		ft_memcpy((void *)line, (const void *)buf, buf_state[0]);
+		ft_memmove((void *)buf, (const void *)frag_start, frag_length);
 	}
-	return (length);
+	return (frag_start);
 }
 
 /*
@@ -142,12 +143,12 @@ size_t	copy_line_shift_fragment(char *buf, char *line)
 * fragment = position at which the buffer was filled up to.
 * Returns (0) if EOF was encountered, (-1) on error or (nb_read)
 */
-int	update_buffer_content(int fd, char *buf, size_t frag_end)
+int	update_buffer_content(int fd, char *buf, int *buf_state)
 {
 	int	nb_read;
 
-	nb_read = read(fd, buf[frag_end], BUFFER_SIZE - frag_end);
+	nb_read = read(fd, buf[buf_state[0]], BUFFER_SIZE - buf_state[0]);
 	if (nb_read == 0)
-		buf[frag_end] = '\0'; //EOF at end of buffer
+		buf[buf_state[0]] = '\0'; //EOF at end of buffer
 	return (nb_read);
 }
