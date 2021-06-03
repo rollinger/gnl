@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/05/30 12:30:04 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/03 11:18:37 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,13 @@
 * Parameter
 * #1. file descriptor for reading
 * #2. The value of what has been read
-* Returns:
+* Function Returns:
 * 1 : A line has been read
 * 0 : EOF has been reached
 * -1 : An error happened
 *
 * fd_buffer => idx=FD [MAX_FD][BUFFER_SIZE + \0]
+* buf_state => -1 undefined, 0 nl found, >0 pos until which the buffer is full
 * MAX_FD: max number of file descriptors. defined by the system.
 * BUFFER_SIZE: optimal buffer size - set by OS/Compilation. Default is 4096 byte
 *
@@ -34,7 +35,7 @@
 * 		 in the buffer or the BUFFER_SIZE is full (and no \n/EOF).
 * 		- If \n/EOF is in the buf, copy left_part to line and move right part
 * 		to start. (actual gnl.) next gnl call will fill up the buf if possible.
-		- If no \n/EOF is in buf, read (BUFFER_SIZE - fragment_length) bytes
+* 		- If no \n/EOF is in buf, read (BUFFER_SIZE - fragment_length) bytes
 * 		to buf start appending it to buf content.
 * 	- Return (1) if \n\0 string is in line.
 * 	- Return (0) if fd has encountered EOF
@@ -43,26 +44,37 @@
 int	get_next_line(int fd, char **line)
 {
 	static char	fd_buffer[MAX_FD][BUFFER_SIZE + 1];
-	int			buf_state;
+	int			buf_state[2];
+	int			eof;
 
-	if (!valid_fd(fd) || BUFFER_SIZE <= 0)
+	if (!valid_fd(fd) || BUFFER_SIZE <= 0) //Maybe test malloc line too?
 		return (-1);
-	buf_state = 1;
-	// buffer update loop until nl found or error (0/-1)
-	while (buf_state > 0)
+	buf_state = get_buffer_state(fd_buffer[fd]); //initial buffer state
+	while (buf_state[1] != 0) // buffer update loop until nl found
 	{
 		// cache full buffer and/or fill buffer up by reading remaining bytes
-		buf_state = get_buffer_state(&fd_buffer[fd]);
+		eof = update_buffer_content(fd, fd_buffer[fd], buf_state);
+		if (eof == 0)
+			break;
+		buf_state = get_buffer_state(fd_buffer[fd]);
+		if (buf_state == 0)
+			break;
+		// Fully loaded w/o nl: cache all and
+		copy_line_shift_fragment(fd_buffer[fd], *line);
+		buf_state = get_buffer_state(fd_buffer[fd]);
 	}
-	if (buf_state == 0)
+	if (buf_state == 0) // newline found
 	{
-		copy_line_shift_fragment(&fd_buffer[fd], *line)
+		copy_line_shift_fragment(fd_buffer[fd], *line);
 		return (1);
 	}
+	return (0); // has to handle EOF
 }
 
 /*
 * Valid file descriptors must be positive and not exceed the MAX_FD definition
+* return 0: not valid FD
+* return 1: valid FD
 */
 size_t	valid_fd(int fd)
 {
@@ -73,25 +85,32 @@ size_t	valid_fd(int fd)
 }
 
 /*
-* Returns in which state the buffer is at fd
-* Returns (-1) on error; (0) if buf contains a newline; (>0) pos until which
-* content is present without a newline.
-* If return == BUFFER_SIZE + 1 the buffer is full and has no \n.
-* return >0 indicates a buffer update operation is needed to fill up the buffer
-* return 0 indicates copy and shift operation is needed
+* Returns in which state the buffer is at the first state position.
+* Returns [pos,0] if a \0 is found
+* Returns [pos,1] if a \n is found
+* pos: until which content is present without a newline.
+*
 */
-int	get_buffer_state(char *buf)
+int	*get_buffer_state(char *buf)
 {
-	int	state;
+	int	state[2]; //[0]=> counter [1]=>state (end-of-buffer / newline)
 
-	if (!buf)
-		return (-1);
-	state = 0;
-	while (buf[state] != '\0')
+	if (!buf) //error - do I need to check?
+		return (NULL);
+	state = {0,0};
+	while (state[0] < BUFFER_SIZE) //iterate BUFFER_SIZE-1 positions
 	{
-		if (buf[state] == '\n')
-			return (0);
-		++state;
+		if (buf[state[0]] == '\n')
+		{
+			state[1] = 1; //Newline found
+			return (state);
+		}
+		if (buf[state[0]] == '\0')
+		{
+			state[1] = 0; //End of Buffer
+			return (state);
+		}
+		++state[0];
 	}
 	return (state);
 }
@@ -99,17 +118,21 @@ int	get_buffer_state(char *buf)
 /*
 * Copies the buffer from start to \n into the line and memmoves the remaining
 * right hand portion to the start of the buffer. The line contains the \n (!)
-* returns length of fragment shifted
+* returns length of fragment shifted / remaining
 */
 size_t	copy_line_shift_fragment(char *buf, char *line)
 {
-	char 	*newline;
+	char	*newline;
 	size_t	length;
 
+	length = 0;
 	newline = (char *)ft_memchr((const void *)buf, '\n', BUFFER_SIZE + 1);
-	length = newline - buf + 1;
-	ft_memcpy((void *)line, (const void *)buf, length);
-	ft_memmove((void *)buf, (const void *)newline, BUFFER_SIZE - length);
+	if (newline)
+	{
+		length = newline - buf + 1;
+		ft_memcpy((void *)line, (const void *)buf, length);
+		ft_memmove((void *)buf, (const void *)newline, BUFFER_SIZE - length);
+	}
 	return (length);
 }
 
@@ -118,14 +141,15 @@ size_t	copy_line_shift_fragment(char *buf, char *line)
 * + 1) of content appending at position frag_start.
 * to the fragment.
 * nbytes = BUFFER_SIZE - fragment_length + 1
-* fragment = string without terminating \n or EOF
+* fragment = position at which the buffer was filled up to.
 * Returns (0) if EOF was encountered, (-1) on error or (nb_read)
-*
 */
-int	update_buffer_content(fd, buf, frag_start=0)
+int	update_buffer_content(int fd, char *buf, size_t frag_end)
 {
-	int nb_read; //Check return vaue of read()
+	int	nb_read;
 
-	nb_read = read(fd, &fd_read_buf[fd][f_start], BUFFER_SIZE - f_start + 1);
-	return(nb_read)
+	nb_read = read(fd, buf[frag_end], BUFFER_SIZE - frag_end);
+	if (nb_read == 0)
+		buf[frag_end] = '\0'; //EOF at end of buffer
+	return (nb_read);
 }

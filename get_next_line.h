@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 08:00:26 by prolling          #+#    #+#             */
-/*   Updated: 2021/05/30 12:30:39 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/03 11:13:35 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,15 +21,17 @@
 # endif
 
 # ifndef MAX_FD
-#  define MAX_FD 10242
+#  define MAX_FD 1024
 # endif
 
-
 int		get_next_line(int fd, char **line);
-int		get_buffer_state(char *buf);
 size_t	valid_fd(int fd);
+int		*get_buffer_state(char *buf);
+
 size_t	copy_line_shift_fragment(char *buf, char *line);
-int		update_buffer_content(fd, buf, frag_start=0);
+
+int		update_buffer_content(int fd, char *buf, size_t frag_end);
+
 void	*ft_memchr(const void *s, int c, size_t n);
 void	*ft_memmove(void *dest, const void *src, size_t n);
 void	*ft_memcpy(void *dest, const void *src, size_t n);
