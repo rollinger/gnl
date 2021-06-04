@@ -6,72 +6,74 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:57 by prolling          #+#    #+#             */
-/*   Updated: 2021/05/30 12:29:25 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/04 18:53:21 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-/*
-* The  memchr()  function  scans  the  initial n bytes of the memory area
-* pointed to by s for the first instance of c.  Both c and the bytes of the
-* memory area pointed to by s are interpreted as unsigned char.
-* The memchr() and memrchr() functions return a pointer to the matching byte
-* or NULL if the character does not occur in the given memory area.
-*/
-void	*ft_memchr(const void *s, int c, size_t n)
+size_t	ft_strlen(const char *s)
 {
-	void	*m;
+	size_t	int_len;
 
-	m = (void *)s;
-	while (n)
-	{
-		if (*(unsigned char *)m == (unsigned char)c)
-			return (m);
-		++m;
-		--n;
-	}
-	return (0);
+	int_len = 0;
+	while (s[int_len] != '\0')
+		int_len++;
+	return (int_len);
 }
 
 /*
-* The memmove() function copies n bytes from memory area src to memory area
-* dest. The memory areas may overlap: copying takes place as though the bytes in
-* src are first copied into a temporary array that does not overlap src or dest,
-* and the bytes are then copied from the temporary array to dest. The memmove()
-* function returns a pointer to dest.
-* memcpy if dest has enough space (dest-src >= n)
-* otherwise a reverse write [dest <<< src] from position n to 0.
+* Valid file descriptors must be positive and not exceed the MAX_FD definition
+* return 0: not valid FD
+* return 1: valid FD
 */
-void	*ft_memmove(void *dest, const void *src, size_t n)
+size_t	ft_valid_fd(int fd)
 {
-	if (!dest && !src)
-		return (NULL);
-	if ((size_t)(dest - src) >= n)
-		return (ft_memcpy(dest, src, n));
-	while (n--)
-		*((unsigned char *)dest + n) = *((unsigned char *)src + n);
-	return (dest);
+	if (fd < 0 || fd > MAX_FD)
+		return (0);
+	else
+		return (1);
 }
 
 /*
-* The  memcpy() function copies n bytes from memory area src to memory area
-* dest. The memory areas must not overlap.  Use memmove(3) if the memory areas
-* do overlap. The memcpy() function returns a pointer to dest.
+* Update the buffer and extends the line
+* fd			= file descriptor
+* *buf			= static buffer at fd
+* **line		= line to extend
+* buf_filled	= state [buf_filled, line_filled]
+* Returns number of bytes read
 */
-void	*ft_memcpy(void *dest, const void *src, size_t n)
+int	ft_update_buf_line(int fd, char *buf, char **line, size_t buf_filled)
 {
-	unsigned char	*m;
+	int	nb_read;
 
-	if (!dest && !src)
-		return ((void *)0);
-	m = dest;
-	while (n)
-	{
-		*m = *(unsigned char *)src;
-		++m;
-		++src;
-		--n;
-	}
-	return (dest);
+	nb_read = read(fd, (void *)&buf[buf_filled], BUFFER_SIZE - buf_filled);
+	if (nb_read > 0)
+		ft_extend_line(line, nb_read);
+	return (nb_read);
+}
+
+/*
+* duplicates the <*line> and extends it, so it can hold at least <more_bytes>
+* more bytes. the extention of bytes is bzero'ed
+* Returns the total space allocated <old_length + more_bytes>
+*/
+size_t	ft_extend_line(char **line, size_t more_bytes)
+{
+	size_t	old_length;
+	size_t	i;
+	char	*new_line;
+
+	old_length = ft_strlen(*line);
+	new_line = (char *)malloc(sizeof(char) * (old_length + more_bytes));
+	if (!new_line)
+		return (0);
+	i = 0;
+	while (i++ < old_length)
+		new_line[i] = *line[i];
+	while (i++ < (old_length + more_bytes))
+		new_line[i] = '\0';
+	free(*line);
+	*line = new_line;
+	return (old_length + more_bytes);
 }
