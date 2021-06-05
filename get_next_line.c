@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/05 20:19:30 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/05 21:12:58 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ int	get_next_line(int fd, char **line)
 	static char	fd_buf[MAX_FD][BUFFER_SIZE + 1];
 	char		*nl_pos;
 	size_t		shifted;
+	size_t		eof;
 
 	*line = (char *)malloc(sizeof(char));
 	if (!ft_valid_fd(fd) || BUFFER_SIZE <= 0 || !(*line))
@@ -58,7 +59,9 @@ int	get_next_line(int fd, char **line)
 	nl_pos = ft_strchr((const char *)fd_buf[fd], '\n');
 	ft_append_buf_line(line, fd_buf[fd], '\n');
 	shifted = ft_shift_buf(fd_buf[fd], nl_pos);
-	ft_reload_buf(fd, fd_buf[fd], shifted, BUFFER_SIZE + 1);
+	eof = ft_reload_buf(fd, fd_buf[fd], shifted, BUFFER_SIZE + 1);
+	if (eof == 0)
+		return (0);
 	return (1);
 }
 
@@ -83,7 +86,7 @@ int	ft_reload_buf(int fd, char *buf, size_t start, size_t end)
 {
 	int	nb_read;
 
-	nb_read = read(fd, (void *)&buf[start], end - start);
+	nb_read = read(fd, (void *)&buf[start], end - start - 1);
 	return (nb_read);
 }
 
@@ -104,10 +107,12 @@ void	ft_append_buf_line(char **line, char *buf, int c)
 	if (!newline)
 		return ;
 	m = newline;
+	c = 0;
 	while (ll)
 	{
-		*m++ = *(*line++);
+		*m++ = (*line)[c];
 		--ll;
+		++c;
 	}
 	while (bl)
 	{
