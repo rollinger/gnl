@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:57 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/04 20:54:48 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/05 15:14:51 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,8 +69,11 @@ size_t	ft_extend_line(char **line, size_t more_bytes)
 	if (!new_line)
 		return (0);
 	i = 0;
-	while (i++ < old_length)
-		new_line[i] = *line[i];
+	while (i < old_length)
+	{
+		*(new_line + i) = *(*line + i);
+		++i;
+	}
 	while (i++ < (old_length + more_bytes))
 		new_line[i] = '\0';
 	free(*line);

@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/05 07:28:42 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/05 16:42:42 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,15 +60,16 @@ int	get_next_line(int fd, char **line)
 		{
 			if (fd_buf[fd][bidx] == '\n')
 				break ;
-			*line[lidx++] = fd_buf[fd][bidx];
+			*(*line + lidx++) = fd_buf[fd][bidx++];
 			if (fd_buf[fd][bidx] == '\0')
 			{
-				*line[lidx++] = '\0';
+				*(*line + lidx) = '\0';
 				return (1);
 			}
 		}
-		*line[lidx++] = '\0';
+		*(*line + lidx) = '\0';
 		midx = 0;
+		bidx++;
 		while (bidx < (BUFFER_SIZE + 1))
 		{
 			fd_buf[fd][midx++] = fd_buf[fd][bidx];
@@ -76,6 +77,7 @@ int	get_next_line(int fd, char **line)
 			if (fd_buf[fd][midx - 1] == '\n')
 				return (1);
 		}
+
 	}
 	return (0);
 }
