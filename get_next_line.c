@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/04 18:51:46 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/05 07:28:42 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 /*
 * Write a function which returns a line read from a file descriptor, without
 * the newline
-* Parameter
+* Parameters
 * #1. file descriptor for reading
 * #2. The value of what has been read
 * Function Returns:
@@ -52,24 +52,29 @@ int	get_next_line(int fd, char **line)
 	if (!ft_valid_fd(fd) || BUFFER_SIZE <= 1 || !(*line))
 		return (-1);
 	lidx = 0;
-	midx = 0;
+	midx = ft_strlen(fd_buf[fd]);
 	while (ft_update_buf_line(fd, fd_buf[fd], line, midx) != 0)
 	{
 		bidx = 0;
-		while (bidx < BUFFER_SIZE)
+		while (bidx < (BUFFER_SIZE + 1))
 		{
-			*line[lidx++] = fd_buf[fd][bidx++];
-			if (fd_buf[fd][bidx - 1] == '\n')
+			if (fd_buf[fd][bidx] == '\n')
 				break ;
-			else if (fd_buf[fd][bidx - 1] == '\0')
-				return (0);
+			*line[lidx++] = fd_buf[fd][bidx];
+			if (fd_buf[fd][bidx] == '\0')
+			{
+				*line[lidx++] = '\0';
+				return (1);
+			}
 		}
 		*line[lidx++] = '\0';
 		midx = 0;
-		while (bidx < BUFFER_SIZE)
+		while (bidx < (BUFFER_SIZE + 1))
 		{
 			fd_buf[fd][midx++] = fd_buf[fd][bidx];
 			fd_buf[fd][bidx++] = '\0';
+			if (fd_buf[fd][midx - 1] == '\n')
+				return (1);
 		}
 	}
 	return (0);

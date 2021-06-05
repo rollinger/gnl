@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:57 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/04 18:53:21 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/04 20:54:48 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,9 +47,9 @@ int	ft_update_buf_line(int fd, char *buf, char **line, size_t buf_filled)
 {
 	int	nb_read;
 
-	nb_read = read(fd, (void *)&buf[buf_filled], BUFFER_SIZE - buf_filled);
+	nb_read = read(fd, (void *)&buf[buf_filled], BUFFER_SIZE + 1 - buf_filled);
 	if (nb_read > 0)
-		ft_extend_line(line, nb_read);
+		ft_extend_line(line, buf_filled + nb_read + 1);
 	return (nb_read);
 }
 
@@ -76,4 +76,26 @@ size_t	ft_extend_line(char **line, size_t more_bytes)
 	free(*line);
 	*line = new_line;
 	return (old_length + more_bytes);
+}
+
+/*
+* The  memchr()  function  scans  the  initial n bytes of the memory area
+* pointed to by s for the first instance of c.  Both c and the bytes of the
+* memory area pointed to by s are interpreted as unsigned char.
+* The memchr() and memrchr() functions return a pointer to the matching byte
+* or NULL if the character does not occur in the given memory area.
+*/
+void	*ft_memchr(const void *s, int c, size_t n)
+{
+	void	*m;
+
+	m = (void *)s;
+	while (n)
+	{
+		if (*(unsigned char *)m == (unsigned char)c)
+			return (m);
+		++m;
+		--n;
+	}
+	return (0);
 }
