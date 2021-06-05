@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/05 16:42:42 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/05 20:19:30 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@
 * -1 : An error happened
 *
 * fd_buffer => idx=FD [MAX_FD][BUFFER_SIZE + \0]
-* buf_state => -1 undefined, 0 nl found, >0 pos until which the buffer is full
 * MAX_FD: max number of file descriptors. defined by the system.
 * BUFFER_SIZE: optimal buffer size - set by OS/Compilation. Default is 4096 byte
 *
@@ -44,40 +43,96 @@
 int	get_next_line(int fd, char **line)
 {
 	static char	fd_buf[MAX_FD][BUFFER_SIZE + 1];
-	size_t		bidx;
-	size_t		midx;
-	size_t		lidx;
+	char		*nl_pos;
+	size_t		shifted;
 
 	*line = (char *)malloc(sizeof(char));
-	if (!ft_valid_fd(fd) || BUFFER_SIZE <= 1 || !(*line))
+	if (!ft_valid_fd(fd) || BUFFER_SIZE <= 0 || !(*line))
 		return (-1);
-	lidx = 0;
-	midx = ft_strlen(fd_buf[fd]);
-	while (ft_update_buf_line(fd, fd_buf[fd], line, midx) != 0)
+	while (ft_strchr((const char *)fd_buf[fd], '\n') == 0)
 	{
-		bidx = 0;
-		while (bidx < (BUFFER_SIZE + 1))
-		{
-			if (fd_buf[fd][bidx] == '\n')
-				break ;
-			*(*line + lidx++) = fd_buf[fd][bidx++];
-			if (fd_buf[fd][bidx] == '\0')
-			{
-				*(*line + lidx) = '\0';
-				return (1);
-			}
-		}
-		*(*line + lidx) = '\0';
-		midx = 0;
-		bidx++;
-		while (bidx < (BUFFER_SIZE + 1))
-		{
-			fd_buf[fd][midx++] = fd_buf[fd][bidx];
-			fd_buf[fd][bidx++] = '\0';
-			if (fd_buf[fd][midx - 1] == '\n')
-				return (1);
-		}
-
+		ft_append_buf_line(line, fd_buf[fd], '\0');
+		ft_bzero((void *)fd_buf[fd], BUFFER_SIZE + 1);
+		ft_reload_buf(fd, fd_buf[fd], 0, BUFFER_SIZE + 1);
 	}
-	return (0);
+	nl_pos = ft_strchr((const char *)fd_buf[fd], '\n');
+	ft_append_buf_line(line, fd_buf[fd], '\n');
+	shifted = ft_shift_buf(fd_buf[fd], nl_pos);
+	ft_reload_buf(fd, fd_buf[fd], shifted, BUFFER_SIZE + 1);
+	return (1);
+}
+
+/*
+* Valid file descriptors must be positive and not exceed the MAX_FD definition
+* return 0: not valid FD
+* return 1: valid FD
+*/
+size_t	ft_valid_fd(int fd)
+{
+	if (fd < 0 || fd > MAX_FD)
+		return (0);
+	else
+		return (1);
+}
+
+/*
+* Reloads the <buf> at <fd> via the read() call from start to end
+* Returns the number of bytes read; 0 if EOF
+*/
+int	ft_reload_buf(int fd, char *buf, size_t start, size_t end)
+{
+	int	nb_read;
+
+	nb_read = read(fd, (void *)&buf[start], end - start);
+	return (nb_read);
+}
+
+/*
+* Appends the <buf> until <c> to the end of <*line> making a bigger newline
+* string and replacing *line.
+*/
+void	ft_append_buf_line(char **line, char *buf, int c)
+{
+	char	*newline;
+	char	*m;
+	size_t	ll;
+	size_t	bl;
+
+	ll = ft_strclen((const char *)*line, '\0');
+	bl = ft_strclen((const char *)buf, c);
+	newline = (char *)malloc(sizeof(char) * (ll + bl + 1));
+	if (!newline)
+		return ;
+	m = newline;
+	while (ll)
+	{
+		*m++ = *(*line++);
+		--ll;
+	}
+	while (bl)
+	{
+		*m++ = *(buf++);
+		--bl;
+	}
+	*m = '\0';
+	free(*line);
+	*line = newline;
+	return ;
+}
+
+/*
+* Shifts the buffer from nl_pos + 1 until an '\0' is encountered to the start
+* of buf. bzero out the remainder of buf. Returns the bytes shifted.
+*/
+size_t	ft_shift_buf(char *buf, char *nl_pos)
+{
+	size_t	bytes_shifted;
+
+	bytes_shifted = 0;
+	++nl_pos;
+	while (nl_pos[bytes_shifted] != '\0')
+		*(buf++) = nl_pos[bytes_shifted++];
+	while (*(buf) != '\0')
+		*(buf++) = '\0';
+	return (bytes_shifted);
 }
