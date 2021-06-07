@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/07 12:34:26 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/07 13:19:45 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 /*
 * Write a function which returns a line read from a file descriptor, without
 * the newline
-* Parameters
+* Parameters:
 * #1. file descriptor for reading
 * #2. The value of what has been read
 * Function Returns:
