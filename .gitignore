@@ -1,6 +1,7 @@
 *.a
 *.so
 *.gch
+*.h.gch
 Makefile
 main.c
 *.txt

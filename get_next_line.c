@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/07 11:30:38 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/07 12:34:26 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,10 @@ int	get_next_line(int fd, char **line)
 
 	*line = (char *)calloc(sizeof(char), 1);
 	if (!ft_valid_fd(fd) || BUFFER_SIZE <= 0 || !(*line))
+	{
+		*line = NULL;
 		return (-1);
+	}
 	buf_state = 1;
 	while (ft_strchr((const char *)fd_buf[fd], '\n') == 0)
 	{
