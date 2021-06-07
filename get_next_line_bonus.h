@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 08:00:26 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/07 12:04:02 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/07 13:09:11 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 # endif
 
 # ifndef MAX_FD
-#  define MAX_FD 179
+#  define MAX_FD 1024
 # endif
 
 int		get_next_line(int fd, char **line);
