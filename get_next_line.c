@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/07 08:13:49 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/07 08:33:00 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,20 +24,19 @@
 * -1 : An error happened
 *
 * fd_buffer => idx=FD [MAX_FD][BUFFER_SIZE + \0]
-* MAX_FD: max number of file descriptors. defined by the system.
-* BUFFER_SIZE: optimal buffer size - set by OS/Compilation. Default is 4096 byte
+* MAX_FD: max number of file descriptors. defined by the system. default 1024
+* BUFFER_SIZE: optimal buffer size - set by OS/Compilation. Often 4096 bytes
 *
 * Algorithm:
-* GOAL: Read one line at a time from fd to line. (buf must hold state of n fd
-* 	between gnl calls)
-* 		- Read the fd content (buffer-block-wise) until \n or EOF is encountered
-* 		 in the buffer or the BUFFER_SIZE is full (and no \n/EOF).
-* 		- If \n/EOF is in the buf, copy left_part to line and move right part
-* 		to start. (actual gnl.) next gnl call will fill up the buf if possible.
-* 		- If no \n/EOF is in buf, read (BUFFER_SIZE - fragment_length) bytes
-* 		to buf start appending it to buf content.
+* GOAL: Read one line at a time from fd to line. (buf must hold state of n FDs
+* between gnl calls)
+*	1) pre function sanity checks: return (-1)
+*	2) append, shift & reload buf to *line until a \n is found in buf[fd]
+*	3) append newline protion of buf[fd] to *line, shift and reload buffer
+*	4) return (0) if buf starts with \0 otherwise \n
+*	Buffer State is persistent because of static fd_buf var.
 * 	- Return (1) if \n\0 string is in line.
-* 	- Return (0) if fd has encountered EOF
+* 	- Return (0) if fd has encountered EOF (buf starts with a \0)
 * 	- Return (-1) on error
 */
 int	get_next_line(int fd, char **line)
@@ -78,8 +77,9 @@ size_t	ft_valid_fd(int fd)
 }
 
 /*
-* Reloads the <buf> at <fd> via the read() call from start to end
-* Returns the number of bytes read; 0 if EOF
+* Reloads the <buf> at <fd> via the read() call from start to end - 1 into the
+* buf. Last byte of any fd_buf is a \0.
+* Returns the number of bytes read; 0 if EOF from the read()
 */
 int	ft_reload_buf(int fd, char *buf, size_t start, size_t end)
 {
@@ -90,8 +90,11 @@ int	ft_reload_buf(int fd, char *buf, size_t start, size_t end)
 }
 
 /*
-* Appends the <buf> until <c> to the end of <*line> making a bigger newline
-* string and replacing *line.
+* Appends the <buf> until <c> is encountered to the end of <*line> making a
+* bigger newline that holds old <*line> and new <buf> content and replacing
+* the <**line>, freeing the old <*line>.
+* newline length is old_line_length + buf_to_c_length +1 for \0 term. newline
+* is calloc'ed so \0 is there.
 */
 void	ft_append_buf_line(char **line, char *buf, int c)
 {
@@ -109,14 +112,9 @@ void	ft_append_buf_line(char **line, char *buf, int c)
 	c = 0;
 	while (ll)
 	{
-		*m++ = (*line)[c];
-		--ll; //
-		++c;
+		*m++ = (*line)[c++];
+		--ll;
 	}
-	/* Here is written some garbage...? wrong ptr? typecast?
-		(*line)[c];		Garbage (Original)
-		(((char *) *line)[c]);
-	*/
 	while (bl)
 	{
 		*m++ = *(buf++);
@@ -129,7 +127,9 @@ void	ft_append_buf_line(char **line, char *buf, int c)
 
 /*
 * Shifts the buffer from nl_pos + 1 until an '\0' is encountered to the start
-* of buf. bzero out the remainder of buf. Returns the bytes shifted.
+* of buf. nl_pos is incremented once before operation, because nl_pos is on
+* the \n char. After shifting the remainder of buf is bzero'ed out.
+* Returns the bytes shifted.
 */
 size_t	ft_shift_buf(char *buf, char *nl_pos)
 {
