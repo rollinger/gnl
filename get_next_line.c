@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:39 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/05 21:12:58 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/07 08:13:49 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,8 @@ int	get_next_line(int fd, char **line)
 	static char	fd_buf[MAX_FD][BUFFER_SIZE + 1];
 	char		*nl_pos;
 	size_t		shifted;
-	size_t		eof;
 
-	*line = (char *)malloc(sizeof(char));
+	*line = (char *)calloc(sizeof(char), 1);
 	if (!ft_valid_fd(fd) || BUFFER_SIZE <= 0 || !(*line))
 		return (-1);
 	while (ft_strchr((const char *)fd_buf[fd], '\n') == 0)
@@ -59,8 +58,8 @@ int	get_next_line(int fd, char **line)
 	nl_pos = ft_strchr((const char *)fd_buf[fd], '\n');
 	ft_append_buf_line(line, fd_buf[fd], '\n');
 	shifted = ft_shift_buf(fd_buf[fd], nl_pos);
-	eof = ft_reload_buf(fd, fd_buf[fd], shifted, BUFFER_SIZE + 1);
-	if (eof == 0)
+	ft_reload_buf(fd, fd_buf[fd], shifted, BUFFER_SIZE + 1);
+	if (fd_buf[fd][0] == '\0')
 		return (0);
 	return (1);
 }
@@ -103,7 +102,7 @@ void	ft_append_buf_line(char **line, char *buf, int c)
 
 	ll = ft_strclen((const char *)*line, '\0');
 	bl = ft_strclen((const char *)buf, c);
-	newline = (char *)malloc(sizeof(char) * (ll + bl + 1));
+	newline = (char *)calloc(sizeof(char), (ll + bl + 1));
 	if (!newline)
 		return ;
 	m = newline;
@@ -111,17 +110,20 @@ void	ft_append_buf_line(char **line, char *buf, int c)
 	while (ll)
 	{
 		*m++ = (*line)[c];
-		--ll;
+		--ll; //
 		++c;
 	}
+	/* Here is written some garbage...? wrong ptr? typecast?
+		(*line)[c];		Garbage (Original)
+		(((char *) *line)[c]);
+	*/
 	while (bl)
 	{
 		*m++ = *(buf++);
 		--bl;
 	}
-	*m = '\0';
 	free(*line);
-	*line = newline;
+	(*line) = newline;
 	return ;
 }
 

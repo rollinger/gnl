@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 08:00:26 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/05 20:08:04 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/06 09:36:03 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,5 +34,6 @@ size_t	ft_shift_buf(char *buf, char *nl_pos);
 char	*ft_strchr(const char *s, int c);
 void	ft_bzero(void *s, size_t n);
 size_t	ft_strclen(const char *s, char c);
+void	*ft_calloc(size_t nmemb, size_t size);
 
 #endif
