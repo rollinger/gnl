@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/27 07:34:57 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/06 09:35:25 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/10 07:12:06 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 /*
 * The strchr() function returns a pointer to the first occurrence of the
 * character c in the string s.
-* RETURN: The  strchr()  and strrchr() functions return a pointer to the matched
+* RETURN: The  strchr() functions return a pointer to the matched
 * character or NULL if the character is not found. The terminating null byte is
 * considered part of the string, so that if c is specified as '\0', these
 * functions return a pointer to the terminator.
@@ -30,7 +30,7 @@ char	*ft_strchr(const char *s, int c)
 	}
 	if (c == '\0')
 		return ((char *)s);
-	return ('\0');
+	return (NULL);
 }
 
 /*

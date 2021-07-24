@@ -6,7 +6,7 @@
 /*   By: prolling <prolling@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 08:00:26 by prolling          #+#    #+#             */
-/*   Updated: 2021/06/07 13:09:15 by prolling         ###   ########.fr       */
+/*   Updated: 2021/06/10 06:27:14 by prolling         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,6 @@
 # endif
 
 int		get_next_line(int fd, char **line);
-size_t	ft_valid_fd(int fd);
-int		ft_reload_buf(int fd, char *buf, size_t start, size_t end);
-void	ft_append_buf_line(char **line, char *buf, int c);
-size_t	ft_shift_buf(char *buf, char *nl_pos);
 /* Util Functions */
 char	*ft_strchr(const char *s, int c);
 void	ft_bzero(void *s, size_t n);
